@@ -4,10 +4,13 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 use App\Models\User;
 use Database\Seeders\UserSeeder;
 
+use function PHPUnit\Framework\assertNotEquals;
 use function PHPUnit\Framework\assertNotNull;
 
 class UserTest extends TestCase
@@ -161,17 +164,18 @@ class UserTest extends TestCase
             'name' => 'fajar',
             'email' => 'test@gmail.com',
             'password' => bcrypt('password123'),
-            'token' => (string) \Illuminate\Support\Str::uuid(),
+            'token' => (string) Str::uuid(),
         ]);
     
+        // Perform the request with the correct token
         $response = $this->getJson('/api/users/current', [
-            'Authorization' =>$user->token,
+            'Authorization' => 'Bearer ' . $user->token,
         ]);
     
+        // Assert the response status and structure
         $response->assertStatus(200)
             ->assertJson([
                 'data' => [
-                    'id' => $user->id,
                     'name' => 'fajar',
                     'email' => 'test@gmail.com',
                 ]
@@ -184,7 +188,7 @@ class UserTest extends TestCase
             'name' => 'fajar',
             'email' => 'test@gmail.com',
             'password' => bcrypt('password123'),
-            'token' => 'test'
+            'token' => (string) Str::uuid(),
         ]);
         $response = $this->getJson('/api/users/current');
     
@@ -202,7 +206,7 @@ class UserTest extends TestCase
             'name' => 'fajar',
             'email' => 'test@gmail.com',
             'password' => bcrypt('password123'),
-            'token' => 'test'
+            'token' => (string) Str::uuid(),
         ]);
         $response = $this->getJson('/api/users/current', [
             'Authorization' => 'invalid-token',
@@ -215,4 +219,101 @@ class UserTest extends TestCase
                 ]
             ]);
     }
+    
+
+    public function testUpdateNameSuccess()
+    {
+        User::create([
+            'name'=> 'test',
+            'email'=> 'test@gmail.com',
+            'password'=> Hash::make('test123'),
+            'token' => (string) Str::uuid(),
+        ]);
+        $olduser = User::where('name','test')->first();
+        $this->patchJson('/api/users/current',
+        [
+            'name'=> 'fajar1',
+        ],
+        [
+            'Authorization' => 'test'
+        ]
+        )->assertStatus(200)
+            ->assertJson([
+                'data'=> [
+                    'name'=> 'fajar1',
+                ]
+            ]);
+        $newuser = User::where('name','fajar1')->first();
+        self::assertNotEquals($olduser->name, $newuser->name);
+    }
+
+    public function testupdatePasswordSucess()
+    {
+        User::create([
+            'name'=> 'test',
+            'email'=> 'test@gmail.com',
+            'password'=> Hash::make('test123'),
+            'token' => (string) Str::uuid(),
+        ]);
+        $olduser = User::where('password','test123')->first();
+        $this->patchJson('/api/users/current',
+        [
+            'password'=> 'fajar123',
+        ],
+        [
+            'Authorization' => 'test'
+        ]
+        )->assertStatus(200)
+            ->assertJson([
+                'data'=> [
+                    'name'=> 'test',
+                ]
+            ]);
+        $newuser = User::where('password','fajar123')->first();
+        self::assertNotEquals($olduser->password, $newuser->password);
+    }
+
+    public function testupdatefailed()
+    {
+        User::create([
+            'name'=> 'test',
+            'email'=> 'test@gmail.com',
+            'password'=> bcrypt     ('test123'),
+            'token' => (string) Str::uuid(),
+        ]);
+        $olduser = User::where('password','test123')->first();
+        $this->patchJson('/api/users/current',
+        [
+            'password'=> 'fajar',
+        ],
+        [
+            'Authorization' => 'test'
+        ]
+        )->assertStatus(401)
+            ->assertJson([
+                'error'=> [
+                    'password'=> [
+                        "Password minimal 6."
+                    ]
+                ]
+            ]);
+    }
+
+    public function testLogoutSuccess()
+    {
+        User::create([
+            'name'=> 'test',
+            'email'=> 'test@gmail.com',
+            'password'=> bcrypt     ('test123'),
+            'token' => (string) Str::uuid(),
+        ]);
+
+    }
+
+    public function testLogoutFailure()
+    {
+
+    }
+
+
 }

@@ -17,8 +17,8 @@ return new class extends Migration
             $table->uuid("id")->primary();
             $table->string("name", 100)->nullable(false)->unique("users_name_unique");
             $table->string("email",100)->nullable(false)->unique("users_email_unique");
-            $table->string("password", 100)->nullable(false);
-            $table->string("token",100)->nullable()->unique("users_token_unique");
+            $table->string("password", 255)->nullable(false);
+            $table->string("token", 255)->nullable()->unique("users_token_unique");
             $table->timestamps();
         });
     }

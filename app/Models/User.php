@@ -2,18 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class User extends Model implements Authenticatable
-{
-    protected $table = 'users';
+class User extends Authenticatable
+{   
+    use HasFactory;
     protected $primaryKey = 'id';
     protected $keyType = 'string';
     public $incrementing = false;
-    protected $fillable = ['name', 'email', 'password'];
+    protected $fillable = ['name', 'email', 'password', 'token'];
+    protected $hidden = ['password'];
 
     protected static function boot()
     {
@@ -84,7 +85,7 @@ class User extends Model implements Authenticatable
      * @return string
      */
     public function getRememberToken() {
-        return $this->remember_token;
+        return $this->token;
     }
     
     /**
@@ -102,6 +103,6 @@ class User extends Model implements Authenticatable
      * @return void
      */
     public function setRememberToken($value) {
-        $this->remember_token = $value;
+        $this->token = $value;
     }
 }

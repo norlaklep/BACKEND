@@ -7,14 +7,13 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\Response;
 
 class ApiAuthMiddleware
 {
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next) : Response
     {
         $authorizationHeader = $request->header('Authorization');
-        
-        Log::info('Authorization Header: ' . $authorizationHeader); // Debugging line
 
         if (!$authorizationHeader || !preg_match('/Bearer\s(\S+)/', $authorizationHeader, $matches)) {
             return response()->json([
@@ -25,10 +24,7 @@ class ApiAuthMiddleware
         }
 
         $token = $matches[1];
-        Log::info('Extracted Token: ' . $token); // Debugging line
-
         $user = User::where('token', $token)->first();
-        Log::info('User: ' . $user); // Debugging line
 
         if (!$user) {
             return response()->json([
@@ -39,8 +35,10 @@ class ApiAuthMiddleware
         }
 
         Auth::login($user);
+        Log::info('User authenticated: ' . $user->id);
 
         return $next($request);
+    
     }
 }
 
