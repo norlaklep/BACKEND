@@ -34,11 +34,10 @@ class ApiAuthMiddleware
             ], 401);
         }
 
-        Auth::login($user);
+        // Directly set the authenticated user without using login()
+        Auth::setUser($user);
         Log::info('User authenticated: ' . $user->id);
 
         return $next($request);
-    
     }
 }
-

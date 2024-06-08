@@ -10,6 +10,8 @@ use Illuminate\Support\Str;
 class User extends Authenticatable
 {   
     use HasFactory;
+
+    protected $table = 'users';
     protected $primaryKey = 'id';
     protected $keyType = 'string';
     public $incrementing = false;

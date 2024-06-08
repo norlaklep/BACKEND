@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 
 class Place extends Model
 {
+    use HasFactory;
     protected $table = 'places';
     protected $primaryKey = 'id';
     protected $keyType = 'string';

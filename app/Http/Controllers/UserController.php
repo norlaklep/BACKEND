@@ -49,7 +49,7 @@ class UserController extends Controller
     public function update(UserUpdateRequest $request): JsonResponse
     {
         $data = $request->validated();
-        $user = Auth::user();
+        $user = User::find(Auth::user()->id);
 
         if (!$user) {
             return response()->json(['error' => 'User not found'], 404);
@@ -68,7 +68,7 @@ class UserController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        $user = Auth::user();
+        $user = User::find(Auth::user()->id);
         $user->token = null;
         $user->save();
 

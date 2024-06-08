@@ -223,96 +223,125 @@ class UserTest extends TestCase
 
     public function testUpdateNameSuccess()
     {
-        User::create([
+        $user = User::create([
             'name'=> 'test',
             'email'=> 'test@gmail.com',
             'password'=> Hash::make('test123'),
             'token' => (string) Str::uuid(),
         ]);
-        $olduser = User::where('name','test')->first();
-        $this->patchJson('/api/users/current',
-        [
-            'name'=> 'fajar1',
-        ],
-        [
-            'Authorization' => 'test'
-        ]
-        )->assertStatus(200)
-            ->assertJson([
-                'data'=> [
-                    'name'=> 'fajar1',
-                ]
-            ]);
-        $newuser = User::where('name','fajar1')->first();
-        self::assertNotEquals($olduser->name, $newuser->name);
+    
+        $oldUser = User::where('name', 'test')->first();
+        $response = $this->patchJson('/api/users/current',
+            [
+                'name'=> 'fajar1',
+            ],
+            [
+                'Authorization' => 'Bearer ' . $oldUser->token
+            ]
+        );
+    
+        $response->assertStatus(200)
+                 ->assertJson([
+                     'data'=> [
+                         'name'=> 'fajar1',
+                     ]
+                 ]);
+    
+        $newUser = User::find($oldUser->id);
+        self::assertNotEquals($oldUser->name, $newUser->name);
     }
 
     public function testupdatePasswordSucess()
     {
-        User::create([
+        $user = User::create([
             'name'=> 'test',
             'email'=> 'test@gmail.com',
             'password'=> Hash::make('test123'),
             'token' => (string) Str::uuid(),
         ]);
-        $olduser = User::where('password','test123')->first();
-        $this->patchJson('/api/users/current',
-        [
-            'password'=> 'fajar123',
-        ],
-        [
-            'Authorization' => 'test'
-        ]
-        )->assertStatus(200)
-            ->assertJson([
-                'data'=> [
-                    'name'=> 'test',
-                ]
-            ]);
-        $newuser = User::where('password','fajar123')->first();
-        self::assertNotEquals($olduser->password, $newuser->password);
+    
+        $oldUser = User::where('email', 'test@gmail.com')->first();
+        $response = $this->patchJson('/api/users/current',
+            [
+                'password'=> 'fajar123',
+            ],
+            [
+                'Authorization' => 'Bearer ' . $oldUser->token
+            ]
+        );
+    
+        $response->assertStatus(200)
+                 ->assertJson([
+                     'data'=> [
+                         'name'=> 'test',
+                     ]
+                 ]);
+    
+        $newUser = User::find($oldUser->id);
+        self::assertTrue(Hash::check('fajar123', $newUser->password));
+        self::assertNotEquals($oldUser->password, $newUser->password);
     }
 
-    public function testupdatefailed()
+    public function testupdateFailed()
     {
-        User::create([
+        $user = User::create([
             'name'=> 'test',
             'email'=> 'test@gmail.com',
-            'password'=> bcrypt     ('test123'),
+            'password'=> Hash::make('test123'),
             'token' => (string) Str::uuid(),
         ]);
-        $olduser = User::where('password','test123')->first();
-        $this->patchJson('/api/users/current',
-        [
-            'password'=> 'fajar',
-        ],
-        [
-            'Authorization' => 'test'
-        ]
-        )->assertStatus(401)
-            ->assertJson([
-                'error'=> [
-                    'password'=> [
-                        "Password minimal 6."
-                    ]
-                ]
-            ]);
+    
+        $response = $this->patchJson('/api/users/current',
+            [
+                'password'=> '123',
+            ],
+            [
+                'Authorization' => 'Bearer ' . $user->token
+            ]
+        );
+    
+        $response->assertStatus(422)
+                 ->assertJsonValidationErrors(['password']);
     }
 
     public function testLogoutSuccess()
     {
-        User::create([
+        $user = User::create([
+            'name'=> 'test',
+            'email'=> 'test@gmail.com',
+            'password'=> Hash::make('test123'),
+            'token' => (string) Str::uuid(),
+        ]);
+    
+        $this->deleteJson('/api/users/logout', [], [
+            'Authorization' => 'Bearer ' . $user->token,
+        ])->assertStatus(200)
+          ->assertJson([
+              "data" => true
+          ]);
+    
+        $user = User::where('email', 'test@gmail.com')->first();
+        self::assertNull($user->token);
+    }
+
+    public function testLogoutFailure()
+    {
+        $user = User::create([
             'name'=> 'test',
             'email'=> 'test@gmail.com',
             'password'=> bcrypt     ('test123'),
             'token' => (string) Str::uuid(),
         ]);
-
-    }
-
-    public function testLogoutFailure()
-    {
-
+        $this->delete(uri: '/api/users/logout', headers: [
+            'Authorization' => 'salah'
+        ])->assertStatus(401)
+            ->assertJson([
+                "errors" => [
+                    "message" => [
+                        "unauthorized"
+                    ]
+                ]
+            ]);
     }
 
 

@@ -5,8 +5,8 @@ namespace App\Http\Requests;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Symfony\Component\HttpFoundation\Response;
-class UserUpdateRequest extends FormRequest
+
+class PlaceUpdateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -26,25 +26,27 @@ class UserUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['nullable','max:100'],
-            'password' =>['nullable','min:6','max:100'],
+            'description' => ['nullable', 'string', 'max:400'],
+            'image_placeholder' => ['nullable', 'url', 'max:255'],
+            'image_gallery' => ['nullable', 'url'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'name.max' => 'Name cannot exceed 100 characters.',
-            'password.min' => 'Password must be at least 6 characters.',
-            'password.max' => 'Password cannot exceed 100 characters.',
+            'description.string' => 'Description must be a string.',
+            'description.max' => 'Description cannot exceed 400 characters.',
+            'image_placeholder.url' => 'Image placeholder must be a valid URL.',
+            'image_placeholder.max' => 'Image placeholder cannot exceed 255 characters.',
+            'image_gallery.json' => 'Image gallery must be a valid URL.',
         ];
     }
 
     protected function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(response()->json([
-            'errors' => $validator->errors(),
+            'errors' => $validator->errors()
         ], 422));
     }
-    
 }

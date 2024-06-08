@@ -17,12 +17,12 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('title', 100)->nullable(false)->unique('places_title_unique');
             $table->string('description', 400)->nullable();
-            $table->string('address', 100)->nullable();
-            $table->string('address_link', 100)->nullable();
-            $table->string('image_placeholder', 100)->nullable();
-            $table->json('image_gallery')->nullable();
-            $table->uuid('user_id')->nullable(false);
-            $table->foreign('user_id')->references('id')->on('users');
+            $table->string('address', 255)->nullable();
+            $table->string('address_link', 255)->nullable();
+            $table->string('image_placeholder', 255)->nullable();
+            $table->string('image_gallery')->nullable();
+            $table->uuid('user_id')->index()->nullable();
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade'); 
             $table->timestamps();
         });
         
